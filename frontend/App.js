@@ -1,42 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet } from "react-native";
-import { supabase } from "./lib/supabase";
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import LoginScreen from './screens/LoginScreen';
+import RegisterScreen from './screens/RegisterScreen';
+import HomeScreen from './screens/HomeScreen'; // Placeholder for now
+
+const Stack = createStackNavigator();
 
 export default function App() {
-  const [users, setUsers] = useState([]);
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  async function fetchUsers() {
-    let { data, error } = await supabase.from("users").select("*");
-    if (error) {
-      console.error("Supabase Error:", error.message);
-    } else {
-      setUsers(data);
-    }
-  }
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>📘 Ghana Home Teachers</Text>
-      {users.length === 0 ? (
-        <Text>No users yet</Text>
-      ) : (
-        <FlatList
-          data={users}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <Text>{item.name} ({item.email})</Text>
-          )}
-        />
-      )}
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="Home" component={HomeScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: "center", justifyContent: "center" },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
-});
