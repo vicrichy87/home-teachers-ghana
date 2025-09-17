@@ -1,54 +1,97 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
-import { supabase } from "../lib/supabase";
+import { useNavigation } from "@react-navigation/native";
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen() {
+  const navigation = useNavigation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
-  const handleLogin = async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setError(error.message);
-    } else {
-      navigation.replace("Home"); // go to main app screen
-    }
-  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <Text style={styles.title}>Welcome Back 👋</Text>
+      <Text style={styles.subtitle}>Login to continue</Text>
+
       <TextInput
+        style={styles.input}
         placeholder="Email"
+        placeholderTextColor="#aaa"
+        keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
-        style={styles.input}
       />
+
       <TextInput
+        style={styles.input}
         placeholder="Password"
+        placeholderTextColor="#aaa"
+        secureTextEntry
         value={password}
         onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
       />
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+
+      <TouchableOpacity style={styles.button}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
+
       <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-        <Text style={styles.link}>New user? Register here</Text>
+        <Text style={styles.link}>
+          Don’t have an account? <Text style={styles.linkBold}>Sign Up</Text>
+        </Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
-  input: { width: "80%", borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 10, marginBottom: 10 },
-  button: { backgroundColor: "#007BFF", padding: 15, borderRadius: 8, marginTop: 10, width: "80%", alignItems: "center" },
-  buttonText: { color: "#fff", fontWeight: "bold" },
-  link: { marginTop: 15, color: "#007BFF" },
-  error: { color: "red", marginBottom: 10 }
+  container: {
+    flex: 1,
+    backgroundColor: "#f9f9f9",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#2d3436",
+    marginBottom: 5,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#636e72",
+    marginBottom: 30,
+  },
+  input: {
+    width: "100%",
+    height: 50,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  button: {
+    backgroundColor: "#0984e3",
+    width: "100%",
+    height: 50,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  link: {
+    fontSize: 14,
+    color: "#636e72",
+  },
+  linkBold: {
+    color: "#0984e3",
+    fontWeight: "bold",
+  },
 });
