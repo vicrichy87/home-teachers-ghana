@@ -13,6 +13,7 @@ export default function RegisterScreen() {
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [sex, setSex] = useState('');
   const [dob, setDob] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -74,7 +75,7 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
-    if (!fullName || !email || !sex || !dob || !city || !userType || !password) {
+    if (!fullName || !email || !phone || !sex || !dob || !city || !userType || !password) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
@@ -84,17 +85,35 @@ export default function RegisterScreen() {
       return;
     }
 
+    // 🔍 Check if email already exists
+    const { data: existingUser, error: checkError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .single();
+
+    if (existingUser) {
+      Alert.alert("Error", "Email already registered. Please login.");
+      return;
+    }
+
+    if (checkError && checkError.code !== "PGRST116") {
+      Alert.alert("Error", checkError.message);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("users")
       .insert([
         {
           full_name: fullName,
           email: email,
+          phone: phone,
           sex: sex,
           dob: dob,
           city: city,
           user_type: userType,
-          password: password, // ⚠️ plain for now
+          password: password, // ⚠️ plain text for now
         },
       ]);
 
@@ -126,6 +145,15 @@ export default function RegisterScreen() {
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
+        />
+
+        {/* Phone */}
+        <TextInput
+          placeholder="Phone Number"
+          style={styles.input}
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
         />
 
         {/* Sex Dropdown */}
