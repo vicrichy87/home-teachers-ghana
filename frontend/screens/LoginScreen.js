@@ -1,49 +1,73 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView } from "react-native";
+import { supabase } from "../lib/supabase";
+import Banner from "./Banner";
 import { useNavigation } from "@react-navigation/native";
-import Banner from "./Banner"; // 👈 import the Banner
 
 export default function LoginScreen() {
   const navigation = useNavigation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <Banner /> 
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter both email and password");
+      return;
+    }
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Welcome Back 👋</Text>
-        <Text style={styles.subtitle}>Login to continue</Text>
+    // fetch user with matching email + password
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .eq("password", password) // ⚠️ plain text for now
+      .single();
+
+    if (error || !data) {
+      Alert.alert("Login Failed", "Invalid email or password");
+      return;
+    }
+
+    // check user type and navigate
+    if (data.user_type === "student") {
+      navigation.replace("Student");
+    } else if (data.user_type === "teacher") {
+      navigation.replace("Teacher");
+    } else {
+      Alert.alert("Error", "Unknown user type");
+    }
+  };
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f0f8ff" }}>
+      <Banner />
+      <View style={styles.container}>
+        <Text style={styles.title}>Login</Text>
 
         <TextInput
-          style={styles.input}
           placeholder="Email"
-          placeholderTextColor="#aaa"
-          keyboardType="email-address"
+          style={styles.input}
           value={email}
           onChangeText={setEmail}
+          keyboardType="email-address"
         />
 
         <TextInput
-          style={styles.input}
           placeholder="Password"
-          placeholderTextColor="#aaa"
+          style={styles.input}
           secureTextEntry
           value={password}
           onChangeText={setPassword}
         />
 
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Login</Text>
+        <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
+          <Text style={styles.loginText}>Login</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-          <Text style={styles.link}>
-            Don’t have an account? <Text style={styles.linkBold}>Sign Up</Text>
-          </Text>
+          <Text style={styles.link}>Don’t have an account? Register</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -51,10 +75,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9f9f9",
-  },
-  content: {
-    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
@@ -62,44 +82,34 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#2d3436",
-    marginBottom: 5,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#636e72",
-    marginBottom: 30,
+    color: "#1e90ff",
+    marginBottom: 20,
   },
   input: {
     width: "100%",
-    height: 50,
     backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    marginBottom: 15,
+    padding: 12,
+    marginVertical: 8,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: "#ddd",
   },
-  button: {
-    backgroundColor: "#0984e3",
+  loginBtn: {
+    backgroundColor: "#1e90ff",
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
     width: "100%",
-    height: 50,
-    borderRadius: 12,
-    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
   },
-  buttonText: {
+  loginText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
   },
   link: {
-    fontSize: 14,
-    color: "#636e72",
-  },
-  linkBold: {
-    color: "#0984e3",
-    fontWeight: "bold",
+    marginTop: 15,
+    color: "#1e90ff",
+    textDecorationLine: "underline",
   },
 });
