@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Platform, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Platform, Alert, SafeAreaView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
+import Banner from "./Banner"; // 👈 import banner
 
 export default function RegisterScreen() {
   const [fullName, setFullName] = useState('');
@@ -14,6 +15,8 @@ export default function RegisterScreen() {
   const [userType, setUserType] = useState('');
   const [image, setImage] = useState(null);
   const [locationEnabled, setLocationEnabled] = useState(false);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
     if (locationEnabled) {
@@ -66,86 +69,110 @@ export default function RegisterScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Register</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f0f8ff" }}>
+      <Banner />
 
-      <TextInput
-        placeholder="Full Name"
-        style={styles.input}
-        value={fullName}
-        onChangeText={setFullName}
-      />
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Register</Text>
 
-      {/* Sex Dropdown */}
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={sex}
-          onValueChange={(value) => setSex(value)}
-          style={styles.picker}
-        >
-          <Picker.Item label="Select Sex" value="" />
-          <Picker.Item label="Male" value="male" />
-          <Picker.Item label="Female" value="female" />
-          <Picker.Item label="Other" value="other" />
-        </Picker>
-      </View>
-
-      {/* Date Picker */}
-      <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
-        <Text style={{ color: dob ? '#000' : '#888' }}>
-          {dob || 'Select Date of Birth'}
-        </Text>
-      </TouchableOpacity>
-      {showDatePicker && (
-        <DateTimePicker
-          value={dob ? new Date(dob) : new Date()}
-          mode="date"
-          display="default"
-          onChange={onChangeDob}
+        <TextInput
+          placeholder="Full Name"
+          style={styles.input}
+          value={fullName}
+          onChangeText={setFullName}
         />
-      )}
 
-      {/* Auto-detect button */}
-      <TouchableOpacity 
-        style={styles.detectBtn} 
-        onPress={() => setLocationEnabled(true)}
-      >
-        <Text style={styles.detectText}>📍 Auto-detect Location</Text>
-      </TouchableOpacity>
+        {/* Sex Dropdown */}
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={sex}
+            onValueChange={(value) => setSex(value)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Select Sex" value="" />
+            <Picker.Item label="Male" value="male" />
+            <Picker.Item label="Female" value="female" />
+            <Picker.Item label="Other" value="other" />
+          </Picker>
+        </View>
 
-      {/* City input (editable if auto-detect fails) */}
-      <TextInput
-        placeholder="Enter City"
-        style={styles.input}
-        value={city}
-        onChangeText={setCity}
-      />
+        {/* Date Picker */}
+        <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
+          <Text style={{ color: dob ? '#000' : '#888' }}>
+            {dob || 'Select Date of Birth'}
+          </Text>
+        </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            value={dob ? new Date(dob) : new Date()}
+            mode="date"
+            display="default"
+            onChange={onChangeDob}
+          />
+        )}
 
-      {/* User Type Dropdown */}
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={userType}
-          onValueChange={(value) => setUserType(value)}
-          style={styles.picker}
+        {/* Auto-detect button */}
+        <TouchableOpacity 
+          style={styles.detectBtn} 
+          onPress={() => setLocationEnabled(true)}
         >
-          <Picker.Item label="Select User Type" value="" />
-          <Picker.Item label="Teacher" value="teacher" />
-          <Picker.Item label="Student" value="student" />
-        </Picker>
-      </View>
+          <Text style={styles.detectText}>📍 Auto-detect Location</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
-        <Text style={styles.uploadText}>Upload Picture</Text>
-      </TouchableOpacity>
+        {/* City input */}
+        <TextInput
+          placeholder="Enter City"
+          style={styles.input}
+          value={city}
+          onChangeText={setCity}
+        />
 
-      {image && (
-        <Image source={{ uri: image }} style={styles.previewImage} />
-      )}
+        {/* User Type Dropdown */}
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={userType}
+            onValueChange={(value) => setUserType(value)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Select User Type" value="" />
+            <Picker.Item label="Teacher" value="teacher" />
+            <Picker.Item label="Student" value="student" />
+          </Picker>
+        </View>
 
-      <TouchableOpacity style={styles.registerBtn}>
-        <Text style={styles.registerText}>Register</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {/* Upload Picture */}
+        <TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
+          <Text style={styles.uploadText}>Upload Picture</Text>
+        </TouchableOpacity>
+
+        {image && (
+          <Image source={{ uri: image }} style={styles.previewImage} />
+        )}
+
+        {/* Password */}
+        <TextInput
+          placeholder="Password"
+          style={styles.input}
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
+
+        {/* Confirm Password */}
+        <TextInput
+          placeholder="Confirm Password"
+          style={styles.input}
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+        />
+
+        {/* Register Button */}
+        <TouchableOpacity style={styles.registerBtn}>
+          <Text style={styles.registerText}>Register</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
