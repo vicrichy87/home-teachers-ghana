@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  SafeAreaView,
+} from "react-native";
 import { supabase } from "../lib/supabase";
 import Banner from "./Banner";
 import { useNavigation } from "@react-navigation/native";
@@ -15,26 +23,37 @@ export default function LoginScreen() {
       return;
     }
 
-    // fetch user with matching email + password
-    const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email)
-      .eq("password", password) // ⚠️ plain text for now
-      .single();
+    try {
+      // fetch user with matching email + password
+      const { data, error } = await supabase
+        .from("users")
+        .select("id, email, user_type, password")
+        .eq("email", email)
+        .eq("password", password) // ⚠️ plain text for now
+        .single();
 
-    if (error || !data) {
-      Alert.alert("Login Failed", "Invalid email or password");
-      return;
-    }
+      if (error || !data) {
+        Alert.alert("Login Failed", "Invalid email or password");
+        return;
+      }
 
-    // check user type and navigate
-    if (data.user_type === "student") {
-      navigation.replace("Student");
-    } else if (data.user_type === "teacher") {
-      navigation.replace("Teacher");
-    } else {
-      Alert.alert("Error", "Unknown user type");
+      // check user type and navigate
+      if (data.user_type === "student") {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Student", params: { userId: data.id } }],
+        });
+      } else if (data.user_type === "teacher") {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Teacher", params: { userId: data.id } }],
+        });
+      } else {
+        Alert.alert("Error", "Unknown user type");
+      }
+    } catch (err) {
+      console.error("Login error:", err.message);
+      Alert.alert("Error", "Something went wrong. Try again.");
     }
   };
 
@@ -50,6 +69,7 @@ export default function LoginScreen() {
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
+          autoCapitalize="none"
         />
 
         <TextInput
