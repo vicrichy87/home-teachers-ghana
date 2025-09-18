@@ -1,74 +1,97 @@
-import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, TextInput, Button, Text, StyleSheet } from 'react-native';
-import Banner from './Banner';
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
-export default function LoginScreen({ navigation }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleLogin = () => {
-    // TODO: Add Supabase authentication logic here
-    console.log('Logging in with:', email, password);
-  };
+export default function LoginScreen() {
+  const navigation = useNavigation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Banner />
+    <View style={styles.container}>
+      <Text style={styles.title}>Welcome Back 👋</Text>
+      <Text style={styles.subtitle}>Login to continue</Text>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>Login</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        placeholderTextColor="#aaa"
+        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
+      />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        placeholderTextColor="#aaa"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+      />
 
-        <Button title="Login" onPress={handleLogin} color="#004aad" />
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>Login</Text>
+      </TouchableOpacity>
 
-        <Text style={styles.link} onPress={() => navigation.navigate('Register')}>
-          Don’t have an account? Register
+      <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+        <Text style={styles.link}>
+          Don’t have an account? <Text style={styles.linkBold}>Sign Up</Text>
         </Text>
-      </ScrollView>
-    </SafeAreaView>
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  content: {
+    backgroundColor: "#f9f9f9",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
-  heading: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#004aad',
-    marginBottom: 20,
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#2d3436",
+    marginBottom: 5,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#636e72",
+    marginBottom: 30,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
+    width: "100%",
+    height: 50,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingHorizontal: 15,
     marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  button: {
+    backgroundColor: "#0984e3",
+    width: "100%",
+    height: 50,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  buttonText: {
+    color: "#fff",
     fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    fontWeight: "bold",
   },
   link: {
-    marginTop: 15,
-    fontSize: 16,
-    color: '#004aad',
-    textAlign: 'center',
+    fontSize: 14,
+    color: "#636e72",
+  },
+  linkBold: {
+    color: "#0984e3",
+    fontWeight: "bold",
   },
 });
