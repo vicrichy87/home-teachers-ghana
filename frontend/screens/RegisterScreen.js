@@ -1,33 +1,29 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  Platform,
-} from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import * as Location from "expo-location";
-import { Picker } from "@react-native-picker/picker";
+// screens/RegisterScreen.js
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Picker } from '@react-native-picker/picker';
 
 export default function RegisterScreen() {
-  const [fullName, setFullName] = useState("");
-  const [sex, setSex] = useState("Male");
-  const [dob, setDob] = useState("");
-  const [city, setCity] = useState("");
-  const [userType, setUserType] = useState("Student");
+  const [fullName, setFullName] = useState('');
+  const [sex, setSex] = useState('');
+  const [dob, setDob] = useState('');
+  const [city, setCity] = useState('');
+  const [userType, setUserType] = useState('');
   const [image, setImage] = useState(null);
-  const [location, setLocation] = useState(null);
 
-  // Pick Image
   const pickImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      alert('Permission to access gallery is required!');
+      return;
+    }
+
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.7,
+      quality: 1,
     });
 
     if (!result.canceled) {
@@ -35,145 +31,138 @@ export default function RegisterScreen() {
     }
   };
 
-  // Get Location
-  const getLocation = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      alert("Permission to access location was denied");
-      return;
-    }
-    let loc = await Location.getCurrentPositionAsync({});
-    setLocation(loc.coords);
-  };
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create Account</Text>
-      <Text style={styles.subtitle}>Fill in your details</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Register</Text>
 
       <TextInput
-        style={styles.input}
         placeholder="Full Name"
+        style={styles.input}
         value={fullName}
         onChangeText={setFullName}
       />
 
-      <Picker
-        selectedValue={sex}
-        style={styles.picker}
-        onValueChange={(itemValue) => setSex(itemValue)}
-      >
-        <Picker.Item label="Male" value="Male" />
-        <Picker.Item label="Female" value="Female" />
-      </Picker>
+      {/* Sex Dropdown */}
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={sex}
+          onValueChange={(value) => setSex(value)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select Sex" value="" />
+          <Picker.Item label="Male" value="male" />
+          <Picker.Item label="Female" value="female" />
+          <Picker.Item label="Other" value="other" />
+        </Picker>
+      </View>
 
       <TextInput
-        style={styles.input}
         placeholder="Date of Birth (YYYY-MM-DD)"
+        style={styles.input}
         value={dob}
         onChangeText={setDob}
       />
 
       <TextInput
-        style={styles.input}
         placeholder="City"
+        style={styles.input}
         value={city}
         onChangeText={setCity}
       />
 
-      <Picker
-        selectedValue={userType}
-        style={styles.picker}
-        onValueChange={(itemValue) => setUserType(itemValue)}
-      >
-        <Picker.Item label="Student" value="Student" />
-        <Picker.Item label="Teacher" value="Teacher" />
-      </Picker>
+      {/* User Type Dropdown */}
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={userType}
+          onValueChange={(value) => setUserType(value)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select User Type" value="" />
+          <Picker.Item label="Teacher" value="teacher" />
+          <Picker.Item label="Student" value="student" />
+        </Picker>
+      </View>
 
-      <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-        <Text style={styles.uploadText}>
-          {image ? "Change Picture" : "Upload Picture"}
-        </Text>
+      <TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
+        <Text style={styles.uploadText}>Upload Picture</Text>
       </TouchableOpacity>
+
       {image && (
-        <Image source={{ uri: image }} style={{ width: 80, height: 80, marginBottom: 15, borderRadius: 40 }} />
+        <Image source={{ uri: image }} style={styles.previewImage} />
       )}
 
-      <TouchableOpacity style={styles.uploadButton} onPress={getLocation}>
-        <Text style={styles.uploadText}>
-          {location ? "Location Saved ✅" : "Allow Location"}
-        </Text>
+      <TouchableOpacity style={styles.registerBtn}>
+        <Text style={styles.registerText}>Register</Text>
       </TouchableOpacity>
-
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Register</Text>
-      </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#f9f9f9",
-    justifyContent: "center",
-    alignItems: "center",
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f8ff',
     padding: 20,
   },
   title: {
     fontSize: 28,
-    fontWeight: "bold",
-    color: "#2d3436",
-    marginBottom: 5,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#636e72",
+    fontWeight: 'bold',
+    color: '#1e90ff',
     marginBottom: 20,
   },
   input: {
-    width: "100%",
-    height: 50,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    marginBottom: 15,
+    width: '100%',
+    backgroundColor: '#fff',
+    padding: 12,
+    marginVertical: 8,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: '#ddd',
+  },
+  pickerContainer: {
+    width: '100%',
+    backgroundColor: '#fff',
+    marginVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    overflow: 'hidden',
   },
   picker: {
-    width: "100%",
+    width: '100%',
     height: 50,
-    marginBottom: 15,
-    backgroundColor: "#fff",
-    borderRadius: 12,
   },
-  uploadButton: {
-    backgroundColor: "#dfe6e9",
-    width: "100%",
-    height: 50,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 15,
+  uploadBtn: {
+    backgroundColor: '#ff9800',
+    padding: 12,
+    borderRadius: 10,
+    marginVertical: 10,
+    width: '100%',
+    alignItems: 'center',
   },
   uploadText: {
-    color: "#2d3436",
-    fontSize: 14,
-    fontWeight: "500",
+    color: '#fff',
+    fontWeight: 'bold',
   },
-  button: {
-    backgroundColor: "#0984e3",
-    width: "100%",
-    height: 50,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
+  previewImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     marginTop: 10,
   },
-  buttonText: {
-    color: "#fff",
+  registerBtn: {
+    backgroundColor: '#1e90ff',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    width: '100%',
+    alignItems: 'center',
+  },
+  registerText: {
+    color: '#fff',
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
 });
