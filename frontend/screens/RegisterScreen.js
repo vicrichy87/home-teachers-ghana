@@ -1,16 +1,42 @@
-// screens/RegisterScreen.js
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Platform, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as Location from 'expo-location';
 
 export default function RegisterScreen() {
   const [fullName, setFullName] = useState('');
   const [sex, setSex] = useState('');
   const [dob, setDob] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [city, setCity] = useState('');
   const [userType, setUserType] = useState('');
   const [image, setImage] = useState(null);
+  const [locationEnabled, setLocationEnabled] = useState(false);
+
+  useEffect(() => {
+    if (locationEnabled) {
+      (async () => {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission denied', 'Allow location to auto-detect your city or enter manually.');
+          setLocationEnabled(false);
+          return;
+        }
+
+        let location = await Location.getCurrentPositionAsync({});
+        let reverseGeocode = await Location.reverseGeocodeAsync({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+
+        if (reverseGeocode.length > 0) {
+          setCity(reverseGeocode[0].city || reverseGeocode[0].region || "Unknown");
+        }
+      })();
+    }
+  }, [locationEnabled]);
 
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -28,6 +54,14 @@ export default function RegisterScreen() {
 
     if (!result.canceled) {
       setImage(result.assets[0].uri);
+    }
+  };
+
+  const onChangeDob = (event, selectedDate) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      const formattedDate = selectedDate.toISOString().split('T')[0];
+      setDob(formattedDate);
     }
   };
 
@@ -56,15 +90,32 @@ export default function RegisterScreen() {
         </Picker>
       </View>
 
-      <TextInput
-        placeholder="Date of Birth (YYYY-MM-DD)"
-        style={styles.input}
-        value={dob}
-        onChangeText={setDob}
-      />
+      {/* Date Picker */}
+      <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
+        <Text style={{ color: dob ? '#000' : '#888' }}>
+          {dob || 'Select Date of Birth'}
+        </Text>
+      </TouchableOpacity>
+      {showDatePicker && (
+        <DateTimePicker
+          value={dob ? new Date(dob) : new Date()}
+          mode="date"
+          display="default"
+          onChange={onChangeDob}
+        />
+      )}
 
+      {/* Auto-detect button */}
+      <TouchableOpacity 
+        style={styles.detectBtn} 
+        onPress={() => setLocationEnabled(true)}
+      >
+        <Text style={styles.detectText}>📍 Auto-detect Location</Text>
+      </TouchableOpacity>
+
+      {/* City input (editable if auto-detect fails) */}
       <TextInput
-        placeholder="City"
+        placeholder="Enter City"
         style={styles.input}
         value={city}
         onChangeText={setCity}
@@ -133,6 +184,18 @@ const styles = StyleSheet.create({
   picker: {
     width: '100%',
     height: 50,
+  },
+  detectBtn: {
+    backgroundColor: '#32cd32',
+    padding: 12,
+    borderRadius: 10,
+    marginVertical: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  detectText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   uploadBtn: {
     backgroundColor: '#ff9800',
