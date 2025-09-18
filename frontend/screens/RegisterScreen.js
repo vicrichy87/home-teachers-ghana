@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
+import { supabase } from '../supabase'; // 
 import Banner from "./Banner"; // 👈 import banner
 
 export default function RegisterScreen() {
@@ -15,6 +16,8 @@ export default function RegisterScreen() {
   const [userType, setUserType] = useState('');
   const [image, setImage] = useState(null);
   const [locationEnabled, setLocationEnabled] = useState(false);
+  const [email, setEmail] = useState(''); // 
+  const [phone, setPhone] = useState(''); // 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -68,6 +71,57 @@ export default function RegisterScreen() {
     }
   };
 
+  // 👇 Save to Supabase
+  const handleRegister = async () => {
+    if (!email || !password || !fullName) {
+      Alert.alert("Error", "Please fill in all required fields.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match!");
+      return;
+    }
+
+    try {
+      // Create user in Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (authError) {
+        Alert.alert("Auth Error", authError.message);
+        return;
+      }
+
+      const userId = authData.user?.id;
+
+      // Insert into users table
+      const { error: dbError } = await supabase.from('users').insert([
+        {
+          id: userId,
+          full_name: fullName,
+          sex,
+          dob,
+          city,
+          user_type: userType,
+          phone,
+          email, // 
+          profile_image: image,
+        },
+      ]);
+
+      if (dbError) {
+        Alert.alert("Database Error", dbError.message);
+        return;
+      }
+
+      Alert.alert("Success", "Registration successful!");
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f0f8ff" }}>
       <Banner />
@@ -75,11 +129,30 @@ export default function RegisterScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Register</Text>
 
+        {/* Full Name */}
         <TextInput
           placeholder="Full Name"
           style={styles.input}
           value={fullName}
           onChangeText={setFullName}
+        />
+
+        {/* Email */}
+        <TextInput
+          placeholder="Email"
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+        />
+
+        {/* Phone */}
+        <TextInput
+          placeholder="Phone Number"
+          style={styles.input}
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
         />
 
         {/* Sex Dropdown */}
@@ -168,7 +241,7 @@ export default function RegisterScreen() {
         />
 
         {/* Register Button */}
-        <TouchableOpacity style={styles.registerBtn}>
+        <TouchableOpacity style={styles.registerBtn} onPress={handleRegister}>
           <Text style={styles.registerText}>Register</Text>
         </TouchableOpacity>
       </ScrollView>
