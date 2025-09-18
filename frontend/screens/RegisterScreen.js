@@ -4,11 +4,15 @@ import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
-import { supabase } from '../supabase'; // 
-import Banner from "./Banner"; // 👈 import banner
+import Banner from "./Banner"; 
+import { supabase } from "../lib/supabase"; // 👈 supabase client
+import { useNavigation } from "@react-navigation/native"; // 👈 navigation hook
 
 export default function RegisterScreen() {
+  const navigation = useNavigation();
+
   const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
   const [sex, setSex] = useState('');
   const [dob, setDob] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -16,8 +20,6 @@ export default function RegisterScreen() {
   const [userType, setUserType] = useState('');
   const [image, setImage] = useState(null);
   const [locationEnabled, setLocationEnabled] = useState(false);
-  const [email, setEmail] = useState(''); // 
-  const [phone, setPhone] = useState(''); // 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -71,54 +73,36 @@ export default function RegisterScreen() {
     }
   };
 
-  // 👇 Save to Supabase
   const handleRegister = async () => {
-    if (!email || !password || !fullName) {
-      Alert.alert("Error", "Please fill in all required fields.");
+    if (!fullName || !email || !sex || !dob || !city || !userType || !password) {
+      Alert.alert("Error", "Please fill in all fields");
       return;
     }
+
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match!");
+      Alert.alert("Error", "Passwords do not match");
       return;
     }
 
-    try {
-      // Create user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (authError) {
-        Alert.alert("Auth Error", authError.message);
-        return;
-      }
-
-      const userId = authData.user?.id;
-
-      // Insert into users table
-      const { error: dbError } = await supabase.from('users').insert([
+    const { data, error } = await supabase
+      .from("users")
+      .insert([
         {
-          id: userId,
           full_name: fullName,
-          sex,
-          dob,
-          city,
+          email: email,
+          sex: sex,
+          dob: dob,
+          city: city,
           user_type: userType,
-          phone,
-          email, // 
-          profile_image: image,
+          password: password, // ⚠️ plain for now
         },
       ]);
 
-      if (dbError) {
-        Alert.alert("Database Error", dbError.message);
-        return;
-      }
-
-      Alert.alert("Success", "Registration successful!");
-    } catch (error) {
+    if (error) {
       Alert.alert("Error", error.message);
+    } else {
+      Alert.alert("Success", "Registration successful!");
+      navigation.replace("Login"); // 👈 redirect to login
     }
   };
 
@@ -129,7 +113,6 @@ export default function RegisterScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Register</Text>
 
-        {/* Full Name */}
         <TextInput
           placeholder="Full Name"
           style={styles.input}
@@ -137,22 +120,12 @@ export default function RegisterScreen() {
           onChangeText={setFullName}
         />
 
-        {/* Email */}
         <TextInput
           placeholder="Email"
           style={styles.input}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
-        />
-
-        {/* Phone */}
-        <TextInput
-          placeholder="Phone Number"
-          style={styles.input}
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
         />
 
         {/* Sex Dropdown */}
