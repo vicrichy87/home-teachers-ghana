@@ -107,14 +107,14 @@ export default function RegisterScreen() {
     if (image) {
       try {
         const response = await fetch(image);
-        const blob = await response.blob();
+        const arrayBuffer = await response.arrayBuffer(); // ✅ FIX
         const fileExt = image.split('.').pop().toLowerCase();
         const fileName = `${Date.now()}.${fileExt}`;
         const filePath = `users/${fileName}`;
 
-        let { error: uploadError } = await supabase.storage
-          .from('avatars') // 👈 make sure you created this bucket in Supabase
-          .upload(filePath, blob, { contentType: blob.type });
+        const { error: uploadError } = await supabase.storage
+          .from('avatars') // 👈 bucket must exist in Supabase
+          .upload(filePath, new Blob([arrayBuffer], { type: `image/${fileExt}` }));
 
         if (uploadError) {
           throw uploadError;
