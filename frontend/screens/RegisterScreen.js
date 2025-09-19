@@ -5,8 +5,8 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
 import Banner from "./Banner"; 
-import { supabase } from "../lib/supabase"; // 👈 supabase client
-import { useNavigation } from "@react-navigation/native"; // 👈 navigation hook
+import { supabase } from "../lib/supabase"; 
+import { useNavigation } from "@react-navigation/native"; 
 
 export default function RegisterScreen() {
   const navigation = useNavigation();
@@ -102,6 +102,36 @@ export default function RegisterScreen() {
       return;
     }
 
+    let uploadedImageUrl = null;
+
+    if (image) {
+      try {
+        const response = await fetch(image);
+        const blob = await response.blob();
+        const fileExt = image.split('.').pop().toLowerCase();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `users/${fileName}`;
+
+        let { error: uploadError } = await supabase.storage
+          .from('avatars') // 👈 make sure you created this bucket in Supabase
+          .upload(filePath, blob, { contentType: blob.type });
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { data: publicUrlData } = supabase
+          .storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+
+        uploadedImageUrl = publicUrlData.publicUrl;
+      } catch (err) {
+        Alert.alert("Error Image upload", err.message);
+        return;
+      }
+    }
+
     const { data, error } = await supabase
       .from("users")
       .insert([
@@ -113,7 +143,8 @@ export default function RegisterScreen() {
           dob: dob,
           city: city,
           user_type: userType,
-          password: password, // ⚠️ plain text for now
+          password: password,
+          avatar_url: uploadedImageUrl, // 👈 save uploaded image
         },
       ]);
 
@@ -121,7 +152,7 @@ export default function RegisterScreen() {
       Alert.alert("Error", error.message);
     } else {
       Alert.alert("Success", "Registration successful!");
-      navigation.replace("Login"); // 👈 redirect to login
+      navigation.replace("Login");
     }
   };
 
@@ -147,7 +178,6 @@ export default function RegisterScreen() {
           keyboardType="email-address"
         />
 
-        {/* Phone */}
         <TextInput
           placeholder="Phone Number"
           style={styles.input}
@@ -156,7 +186,6 @@ export default function RegisterScreen() {
           keyboardType="phone-pad"
         />
 
-        {/* Sex Dropdown */}
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={sex}
@@ -170,7 +199,6 @@ export default function RegisterScreen() {
           </Picker>
         </View>
 
-        {/* Date Picker */}
         <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
           <Text style={{ color: dob ? '#000' : '#888' }}>
             {dob || 'Select Date of Birth'}
@@ -185,7 +213,6 @@ export default function RegisterScreen() {
           />
         )}
 
-        {/* Auto-detect button */}
         <TouchableOpacity 
           style={styles.detectBtn} 
           onPress={() => setLocationEnabled(true)}
@@ -193,7 +220,6 @@ export default function RegisterScreen() {
           <Text style={styles.detectText}>📍 Auto-detect Location</Text>
         </TouchableOpacity>
 
-        {/* City input */}
         <TextInput
           placeholder="Enter City"
           style={styles.input}
@@ -201,7 +227,6 @@ export default function RegisterScreen() {
           onChangeText={setCity}
         />
 
-        {/* User Type Dropdown */}
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={userType}
@@ -214,7 +239,6 @@ export default function RegisterScreen() {
           </Picker>
         </View>
 
-        {/* Upload Picture */}
         <TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
           <Text style={styles.uploadText}>Upload Picture</Text>
         </TouchableOpacity>
@@ -223,7 +247,6 @@ export default function RegisterScreen() {
           <Image source={{ uri: image }} style={styles.previewImage} />
         )}
 
-        {/* Password */}
         <TextInput
           placeholder="Password"
           style={styles.input}
@@ -232,7 +255,6 @@ export default function RegisterScreen() {
           onChangeText={setPassword}
         />
 
-        {/* Confirm Password */}
         <TextInput
           placeholder="Confirm Password"
           style={styles.input}
@@ -241,7 +263,6 @@ export default function RegisterScreen() {
           onChangeText={setConfirmPassword}
         />
 
-        {/* Register Button */}
         <TouchableOpacity style={styles.registerBtn} onPress={handleRegister}>
           <Text style={styles.registerText}>Register</Text>
         </TouchableOpacity>
