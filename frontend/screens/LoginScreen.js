@@ -37,17 +37,13 @@ export default function LoginScreen() {
         return;
       }
 
+      console.log("✅ Login success, userId:", data.id);
+
       // check user type and navigate
       if (data.user_type === "student") {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "Student", params: { userId: data.id } }],
-        });
+        navigation.navigate("Student", { userId: data.id });
       } else if (data.user_type === "teacher") {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "Teacher", params: { userId: data.id } }],
-        });
+        navigation.navigate("Teacher", { userId: data.id });
       } else {
         Alert.alert("Error", "Unknown user type");
       }
