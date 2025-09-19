@@ -15,12 +15,16 @@ import { supabase } from "../supabase";
 export default function TeacherScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { userId } = route.params; // 👈 coming from LoginScreen
+
+  // 👇 safer param extraction
+  const userId = route.params?.userId || null;
 
   const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("TeacherScreen received userId:", userId);
+
     const fetchTeacher = async () => {
       try {
         const { data, error } = await supabase
@@ -38,7 +42,11 @@ export default function TeacherScreen() {
       }
     };
 
-    if (userId) fetchTeacher();
+    if (userId) {
+      fetchTeacher();
+    } else {
+      setLoading(false); // stop spinner if no userId
+    }
   }, [userId]);
 
   const handleLogout = async () => {
@@ -53,6 +61,16 @@ export default function TeacherScreen() {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#1e90ff" />
+      </View>
+    );
+  }
+
+  if (!userId) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ color: "red" }}>
+          ⚠️ No userId received. Check navigation params.
+        </Text>
       </View>
     );
   }
