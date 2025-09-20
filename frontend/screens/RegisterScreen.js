@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Platform, Alert, SafeAreaView } from 'react-native';
+import { 
+  View, Text, TextInput, TouchableOpacity, StyleSheet, 
+  Image, ScrollView, Platform, Alert, SafeAreaView 
+} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -107,14 +110,15 @@ export default function RegisterScreen() {
     if (image) {
       try {
         const response = await fetch(image);
-        const arrayBuffer = await response.arrayBuffer(); // ✅ FIX
+        const blob = await response.blob();   // ✅ FIXED HERE
+
         const fileExt = image.split('.').pop().toLowerCase();
         const fileName = `${Date.now()}.${fileExt}`;
         const filePath = `users/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('avatars') // 👈 bucket must exist in Supabase
-          .upload(filePath, new Blob([arrayBuffer], { type: `image/${fileExt}` }));
+          .upload(filePath, blob, { contentType: blob.type });
 
         if (uploadError) {
           throw uploadError;
