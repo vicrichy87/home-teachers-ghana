@@ -110,7 +110,7 @@ export default function RegisterScreen() {
     if (image) {
       try {
         const response = await fetch(image);
-        const blob = await response.blob();   // ✅ FIXED HERE
+        const blob = await response.blob();   // ✅ Works in Expo
 
         const fileExt = image.split('.').pop().toLowerCase();
         const fileName = `${Date.now()}.${fileExt}`;
