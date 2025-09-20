@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
+import * as FileSystem from 'expo-file-system';   // ✅ Added for image upload
 import Banner from "./Banner"; 
 import { supabase } from "../lib/supabase"; 
 import { useNavigation } from "@react-navigation/native"; 
@@ -58,7 +59,7 @@ export default function RegisterScreen() {
     }
 
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: [ImagePicker.MediaType.Image], // ✅ fixed deprecated option
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
@@ -109,24 +110,26 @@ export default function RegisterScreen() {
 
     if (image) {
       try {
-        const response = await fetch(image);
-        const blob = await response.blob();   // ✅ Works in Expo
-
         const fileExt = image.split('.').pop().toLowerCase();
         const fileName = `${Date.now()}.${fileExt}`;
         const filePath = `users/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('avatars') // 👈 bucket must exist in Supabase
-          .upload(filePath, blob, { contentType: blob.type });
+        // ✅ Upload image using FileSystem (instead of blob)
+        const { uri } = await FileSystem.getInfoAsync(image);
 
-        if (uploadError) {
-          throw uploadError;
-        }
+        let { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(filePath, {
+            uri,
+            name: fileName,
+            type: `image/${fileExt}`,
+          });
+
+        if (uploadError) throw uploadError;
 
         const { data: publicUrlData } = supabase
           .storage
-          .from('avatars')
+          .from("avatars")
           .getPublicUrl(filePath);
 
         uploadedImageUrl = publicUrlData.publicUrl;
@@ -136,7 +139,7 @@ export default function RegisterScreen() {
       }
     }
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("users")
       .insert([
         {
